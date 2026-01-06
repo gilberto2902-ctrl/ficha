@@ -24,13 +24,10 @@ const Login: React.FC<LoginProps> = ({ onSuccess, onCancel }) => {
   return (
     <div className="flex items-center justify-center py-10 animate-in fade-in zoom-in-95 duration-500">
       <div className="bg-white w-full max-w-md rounded-[40px] p-10 shadow-2xl border border-white">
-        <div className="w-20 h-20 bg-slate-900 text-white rounded-[24px] flex items-center justify-center mx-auto mb-8 shadow-xl">
-          <i className="fa-solid fa-shield-halved text-4xl"></i>
-        </div>
-        
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-black text-slate-800 uppercase tracking-tight">Login Administrativo</h2>
-          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-2">Área de acesso restrito</p>
+        <div className="text-center mb-10 mt-4">
+          <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter">ACESSO</h1>
+          <h2 className="text-xl font-black text-slate-400 uppercase tracking-tight">Administrativo</h2>
+          <p className="text-slate-300 text-[10px] font-bold uppercase tracking-[0.2em] mt-4">Associação Amor e Bondade</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">

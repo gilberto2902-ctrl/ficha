@@ -66,7 +66,7 @@ const INITIAL_DATA: FormData = {
   crasReferenced: 'Não',
   crasDetails: '',
   hasCadUnico: 'Não',
-  benefits: { bolsaJovem: '', bolsaFamilia: '', bpcLoas: '', auxAluguel: '' },
+  benefits: { bolsaFamilia: 'Não', bpcLoas: 'Não', auxAluguel: 'Não', idJovem: 'Não' },
   healthTreatment: 'Não',
   healthDetails: '',
   continuousMedication: 'Não',
@@ -116,11 +116,22 @@ const App: React.FC = () => {
       if (activity) {
         setFormData(prev => ({
           ...prev,
-          selectedActivities: [...prev.selectedActivities, { activityId, timeSlot: activity.schedule[0] }]
+          selectedActivities: [...prev.selectedActivities, { activityId }]
         }));
       }
     }
   };
+
+  const checkDuplicateCpf = (cpf: string) => {
+    const saved = localStorage.getItem('amor_bondade_submissions');
+    if (!saved) return false;
+    const submissions: FormData[] = JSON.parse(saved);
+    const sanitizedCpf = cpf.replace(/\D/g, '');
+    if (!sanitizedCpf || sanitizedCpf.length < 11) return false;
+    return submissions.some(s => s.cpf.replace(/\D/g, '') === sanitizedCpf);
+  };
+
+  const isCpfDuplicate = checkDuplicateCpf(formData.cpf);
 
   const saveSubmission = (data: FormData) => {
     const saved = localStorage.getItem('amor_bondade_submissions');
@@ -135,15 +146,52 @@ const App: React.FC = () => {
     return newSubmission;
   };
 
+  const handleNextStep = () => {
+    if (step === 0) {
+      if (!formData.fullName.trim()) {
+        alert('Por favor, informe o Nome Completo do aluno.');
+        return;
+      }
+      if (!formData.cpf.trim() || formData.cpf.replace(/\D/g, '').length < 11) {
+        alert('Por favor, informe um CPF válido para continuar.');
+        return;
+      }
+      if (checkDuplicateCpf(formData.cpf)) {
+        alert('⚠️ ESTE CPF JÁ ESTÁ CADASTRADO: Identificamos que já existe uma inscrição ativa para este CPF (' + formData.cpf + ').');
+        return;
+      }
+    }
+    setStep(s => Math.min(FORM_STEPS.length - 1, s + 1));
+  };
+
   const handleFinalAction = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.imageRightsConsent || !formData.veracityConsent) {
-      alert('É necessário aceitar os termos de compromisso.');
+    
+    if (formData.selectedActivities.length === 0) {
+      alert('⚠️ ATIVIDADE OBRIGATÓRIA: Você precisa selecionar pelo menos 1 atividade para realizar a rematrícula.');
+      setStep(5);
       return;
     }
+
+    if (!formData.imageRightsConsent || !formData.veracityConsent) {
+      alert('É necessário aceitar os termos de compromisso para finalizar.');
+      return;
+    }
+
+    if (checkDuplicateCpf(formData.cpf)) {
+      alert('❌ ERRO NO ENVIO: O CPF informado já possui um cadastro no sistema.');
+      return;
+    }
+
     const savedData = saveSubmission(formData);
     setPreviewData(savedData);
     setShowDocPreview(true);
+  };
+
+  const handleLogout = () => {
+    setIsAuth(false);
+    sessionStorage.removeItem('amor_bondade_auth');
+    setView('form');
   };
 
   const YesNoToggle = ({ label, value, onChange, colorClass = "bg-blue-600" }: { label: string, value: string | boolean, onChange: (val: any) => void, colorClass?: string }) => {
@@ -186,10 +234,7 @@ const App: React.FC = () => {
         <div className="bg-white w-full max-w-4xl max-h-screen md:max-h-[95vh] overflow-y-auto md:rounded-[40px] shadow-2xl animate-in zoom-in-95 duration-300 print-content">
           <div className="sticky top-0 bg-slate-900 text-white p-6 flex justify-between items-center z-10 no-print">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
-                <i className="fa-solid fa-file-invoice text-xl"></i>
-              </div>
-              <h3 className="font-black uppercase tracking-widest text-sm">Visualizando Ficha Nº {data.id}</h3>
+              <h3 className="font-black uppercase tracking-widest text-sm">Ficha de Rematrícula Nº {data.id}</h3>
             </div>
             {!isAdmin && (
                <button onClick={onClose} className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
@@ -199,18 +244,13 @@ const App: React.FC = () => {
           </div>
           
           <div className="p-8 md:p-12 text-slate-800 bg-white relative">
-            <div className="flex justify-between items-start border-b-2 border-slate-900 pb-8 mb-10">
-               <div className="w-24 h-24 flex items-center justify-center border p-2">
-                 <img src="https://i.ibb.co/LhyYx6B/logo-amor-bondade.png" alt="Logo" className="max-w-full h-auto grayscale" />
-               </div>
-               <div className="text-center flex-1 pt-2">
-                 <h1 className="text-2xl font-black uppercase text-[#1d5ba5]">FICHA DE INSCRIÇÃO</h1>
-                 <h2 className="text-lg font-bold uppercase">ASSOCIAÇÃO AMOR E BONDADE</h2>
-                 <p className="text-[8px] font-bold text-slate-500 mt-1 uppercase">Unidade I - Guarulhos - SP</p>
-               </div>
-               <div className="w-28 border-4 border-slate-900 p-2 text-center rounded-xl bg-slate-50">
-                 <p className="text-[8px] font-black uppercase text-slate-500">Inscrição nº</p>
-                 <p className="text-3xl font-black">{data.id}</p>
+            <div className="flex flex-col items-center border-b-2 border-slate-900 pb-8 mb-10 text-center">
+               <h1 className="text-3xl font-black uppercase text-[#1d5ba5] tracking-tight">ASSOCIAÇÃO AMOR E BONDADE</h1>
+               <h2 className="text-lg font-bold uppercase text-slate-600 mt-1">FICHA DE INSCRIÇÃO - 2026</h2>
+               <p className="text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-[0.2em]">Unidade I - Guarulhos - SP</p>
+               <div className="mt-6 border-2 border-slate-900 px-6 py-2 rounded-xl bg-slate-50">
+                 <p className="text-[8px] font-black uppercase text-slate-500">Número de Inscrição</p>
+                 <p className="text-2xl font-black">{data.id}</p>
                </div>
             </div>
 
@@ -219,6 +259,7 @@ const App: React.FC = () => {
                 <h4 className="font-black border-b border-slate-900 uppercase">1. DADOS PESSOAIS DO ALUNO</h4>
                 <div className="grid grid-cols-4 gap-2 border border-slate-900 p-2 rounded">
                   <div className="col-span-4 uppercase"><strong>NOME COMPLETO:</strong> {data.fullName}</div>
+                  <div className="col-span-4 uppercase"><strong>E-MAIL:</strong> {data.email || 'Não informado'}</div>
                   <div className="col-span-2 uppercase"><strong>NATURALIDADE/UF:</strong> {data.birthPlace}</div>
                   <div><strong>DATA NASC:</strong> {data.birthDate}</div>
                   <div><strong>IDADE:</strong> {data.age}</div>
@@ -255,11 +296,21 @@ const App: React.FC = () => {
                     return (
                       <div key={sa.activityId} className="flex justify-between items-center text-[9px]">
                         <span className="font-bold uppercase">● {act?.name}</span>
-                        <span className="italic">Instrutor: {act?.instructor} | Horário: {sa.timeSlot}</span>
+                        <span className="italic">Instrutor: {act?.instructor}</span>
                       </div>
                     );
                   })}
                   {data.selectedActivities.length === 0 && <p className="italic text-slate-400">Nenhuma atividade selecionada</p>}
+                </div>
+              </section>
+
+              <section className="space-y-1">
+                <h4 className="font-black border-b border-slate-900 uppercase">5. BENEFÍCIOS SOCIAIS</h4>
+                <div className="grid grid-cols-4 gap-2 border border-slate-900 p-2 rounded">
+                  <div className="uppercase"><strong>Bolsa Família:</strong> {data.benefits.bolsaFamilia}</div>
+                  <div className="uppercase"><strong>BPC/LOAS:</strong> {data.benefits.bpcLoas}</div>
+                  <div className="uppercase"><strong>Aux. Aluguel:</strong> {data.benefits.auxAluguel}</div>
+                  <div className="uppercase"><strong>ID Jovem:</strong> {data.benefits.idJovem}</div>
                 </div>
               </section>
 
@@ -304,10 +355,18 @@ const App: React.FC = () => {
       case 0: return (
         <div className="space-y-6 animate-in fade-in duration-300">
           <SectionHeader num={1} title="Identificação" colorClass="bg-blue-600" />
-          <Input label="Nome Completo do Aluno" value={formData.fullName} onChange={e => handleInputChange('fullName', e.target.value)} />
+          <Input label="Nome Completo do Aluno" value={formData.fullName} onChange={e => handleInputChange('fullName', e.target.value)} required />
+          <Input label="E-mail do Aluno ou Responsável" type="email" placeholder="exemplo@email.com" value={formData.email} onChange={e => handleInputChange('email', e.target.value)} />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input label="Data de Nascimento" type="date" value={formData.birthDate} onChange={e => handleInputChange('birthDate', e.target.value)} />
-            <Input label="CPF" placeholder="000.000.000-00" value={formData.cpf} onChange={e => handleInputChange('cpf', e.target.value)} />
+            <Input 
+              label="CPF *" 
+              placeholder="000.000.000-00" 
+              value={formData.cpf} 
+              error={isCpfDuplicate ? '⚠️ Este CPF já está cadastrado!' : ''}
+              onChange={e => handleInputChange('cpf', e.target.value)} 
+              required
+            />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Input label="RG" value={formData.rg} onChange={e => handleInputChange('rg', e.target.value)} />
@@ -395,13 +454,13 @@ const App: React.FC = () => {
           <YesNoToggle label="Possui CadÚnico?" value={formData.hasCadUnico} onChange={v => handleInputChange('hasCadUnico', v)} colorClass="bg-green-600" />
           <div className="p-6 bg-green-50 rounded-[32px] space-y-4 border-2 border-green-100">
              <p className="font-black text-[11px] uppercase text-green-700 px-2 tracking-widest flex items-center gap-2">
-               <i className="fa-solid fa-hand-holding-heart"></i> Benefícios (Mensal)
+               <i className="fa-solid fa-hand-holding-heart"></i> Benefícios Sociais
              </p>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label="Bolsa Jovem" placeholder="R$ 0,00" value={formData.benefits.bolsaJovem} onChange={e => handleBenefitChange('bolsaJovem', e.target.value)} />
-                <Input label="Bolsa Família" placeholder="R$ 0,00" value={formData.benefits.bolsaFamilia} onChange={e => handleBenefitChange('bolsaFamilia', e.target.value)} />
-                <Input label="BPC / LOAS" placeholder="R$ 0,00" value={formData.benefits.bpcLoas} onChange={e => handleBenefitChange('bpcLoas', e.target.value)} />
-                <Input label="Auxílio Aluguel" placeholder="R$ 0,00" value={formData.benefits.auxAluguel} onChange={e => handleBenefitChange('auxAluguel', e.target.value)} />
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <YesNoToggle label="Bolsa Família?" value={formData.benefits.bolsaFamilia} onChange={v => handleBenefitChange('bolsaFamilia', v)} colorClass="bg-green-600" />
+                <YesNoToggle label="BPC / LOAS?" value={formData.benefits.bpcLoas} onChange={v => handleBenefitChange('bpcLoas', v)} colorClass="bg-green-600" />
+                <YesNoToggle label="Auxílio Aluguel?" value={formData.benefits.auxAluguel} onChange={v => handleBenefitChange('auxAluguel', v)} colorClass="bg-green-600" />
+                <YesNoToggle label="Possui ID Jovem?" value={formData.benefits.idJovem} onChange={v => handleBenefitChange('idJovem', v)} colorClass="bg-green-600" />
              </div>
           </div>
         </div>
@@ -410,6 +469,7 @@ const App: React.FC = () => {
         <div className="space-y-6">
           <SectionHeader num={6} title="Atividades e Saúde" colorClass="bg-red-500" />
           <div className="p-1 bg-slate-100 rounded-[32px]">
+            <p className="px-6 pt-4 pb-2 text-[10px] font-black uppercase text-slate-500 tracking-widest">Selecione até 2 atividades *</p>
             <div className="p-6 bg-white border-2 border-slate-100 rounded-[31px] grid grid-cols-1 md:grid-cols-3 gap-3">
                {ACTIVITIES.map(act => (
                  <button 
@@ -436,6 +496,14 @@ const App: React.FC = () => {
         <div className="space-y-6">
           <SectionHeader num={7} title="Termos Finais" colorClass="bg-slate-800" />
           <div className="p-8 bg-white border-2 border-slate-100 rounded-[32px] space-y-6">
+             <div className={`p-4 rounded-2xl border-2 mb-4 ${formData.selectedActivities.length > 0 ? 'bg-green-50 border-green-100 text-green-700' : 'bg-red-50 border-red-100 text-red-700'}`}>
+               <p className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                 <i className={`fa-solid ${formData.selectedActivities.length > 0 ? 'fa-circle-check' : 'fa-circle-exclamation'}`}></i>
+                 {formData.selectedActivities.length > 0 
+                   ? `Atividade(s) Selecionada(s): ${formData.selectedActivities.length}` 
+                   : 'Nenhuma atividade selecionada! Volte ao passo anterior.'}
+               </p>
+             </div>
              <label className="flex items-start gap-4 cursor-pointer group">
                <input type="checkbox" checked={formData.imageRightsConsent} onChange={e => handleInputChange('imageRightsConsent', e.target.checked)} className="w-6 h-6 mt-1 accent-[#1d5ba5] rounded-lg" />
                <span className="text-xs font-black uppercase text-slate-600 leading-relaxed">Autorizo o uso de imagem e voz para fins institucionais da Associação Amor e Bondade.</span>
@@ -478,11 +546,8 @@ const App: React.FC = () => {
       <div className="w-full max-w-5xl px-4 py-10">
         {view === 'form' ? (
           <div className="animate-in fade-in duration-500">
-            <header className="mb-10 text-center flex flex-col items-center">
-              <div className="w-20 h-20 bg-[#1d5ba5] rounded-[24px] flex items-center justify-center text-white mb-6 shadow-2xl shadow-blue-200">
-                <i className="fa-solid fa-heart-pulse text-4xl"></i>
-              </div>
-              <h1 className="text-4xl md:text-5xl font-black text-[#1d5ba5] uppercase tracking-tighter mb-2">Amor e Bondade</h1>
+            <header className="mb-14 text-center flex flex-col items-center">
+              <h1 className="text-5xl md:text-7xl font-black text-[#1d5ba5] uppercase tracking-tighter mb-2">Amor e Bondade</h1>
               <p className="text-slate-400 font-bold uppercase tracking-[0.4em] text-[10px]">REMATRÍCULA ONLINE 2026</p>
             </header>
 
@@ -502,17 +567,18 @@ const App: React.FC = () => {
                   {step < FORM_STEPS.length - 1 ? (
                     <button 
                       type="button" 
-                      onClick={() => setStep(s => Math.min(FORM_STEPS.length-1, s+1))} 
-                      className="px-10 py-4 bg-[#1d5ba5] text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-blue-800 active:scale-95 transition-all"
+                      onClick={handleNextStep} 
+                      disabled={step === 0 && (!formData.cpf || isCpfDuplicate)}
+                      className={`px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all ${step === 0 && (!formData.cpf || isCpfDuplicate) ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-[#1d5ba5] text-white hover:bg-blue-800 active:scale-95'}`}
                     >
                       Continuar
                     </button>
                   ) : (
                     <button 
                       type="submit" 
-                      className={`px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl transition-all ${formData.imageRightsConsent && formData.veracityConsent ? 'bg-blue-600 text-white hover:scale-105 shadow-blue-200' : 'bg-slate-100 text-slate-300 cursor-not-allowed'}`}
+                      className={`px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl transition-all ${formData.imageRightsConsent && formData.veracityConsent && formData.selectedActivities.length > 0 ? 'bg-blue-600 text-white hover:scale-105 shadow-blue-200' : 'bg-slate-100 text-slate-300 cursor-not-allowed'}`}
                     >
-                      Visualizar e Enviar Ficha
+                      {formData.selectedActivities.length === 0 ? 'Selecione uma atividade' : 'Visualizar e Enviar Ficha'}
                     </button>
                   )}
                 </div>
@@ -521,10 +587,8 @@ const App: React.FC = () => {
           </div>
         ) : view === 'success' ? (
           <div className="flex flex-col items-center justify-center py-20 animate-in fade-in zoom-in-95 duration-500">
-            <div className="w-32 h-32 bg-green-500 text-white rounded-[40px] flex items-center justify-center mb-10 shadow-2xl shadow-green-200">
-              <i className="fa-solid fa-check text-6xl"></i>
-            </div>
-            <h2 className="text-4xl md:text-5xl font-black text-slate-800 text-center uppercase tracking-tighter mb-4">Inscrição Enviada!</h2>
+            <h2 className="text-5xl md:text-7xl font-black text-green-500 text-center uppercase tracking-tighter mb-4">ENVIADO!</h2>
+            <h3 className="text-3xl font-black text-slate-800 text-center uppercase tracking-tight mb-4">Sucesso Total</h3>
             <p className="text-slate-500 font-bold text-center max-w-md mb-12 uppercase text-xs tracking-widest leading-relaxed">
               Sua rematrícula para o ano de 2026 foi processada com sucesso. A Associação Amor e Bondade agradece sua participação!
             </p>
@@ -541,7 +605,10 @@ const App: React.FC = () => {
             onCancel={() => setView('form')} 
           />
         ) : (
-          <AdminDashboard onViewDetails={(data) => { setPreviewData(data); setShowDocPreview(true); }} />
+          <AdminDashboard 
+            onViewDetails={(data) => { setPreviewData(data); setShowDocPreview(true); }} 
+            onLogout={handleLogout}
+          />
         )}
       </div>
 

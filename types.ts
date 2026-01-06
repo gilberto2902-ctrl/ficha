@@ -3,13 +3,11 @@ export interface Activity {
   id: string;
   name: string;
   instructor: string;
-  schedule: string[];
   days: string[];
 }
 
 export interface SelectedActivity {
   activityId: string;
-  timeSlot: string;
 }
 
 export interface FormData {
@@ -84,10 +82,10 @@ export interface FormData {
   crasDetails: string;
   hasCadUnico: 'Sim' | 'Não' | '';
   benefits: {
-    bolsaJovem: string;
     bolsaFamilia: string;
     bpcLoas: string;
     auxAluguel: string;
+    idJovem: string;
   };
 
   // Seção 6: Saúde & Atividades

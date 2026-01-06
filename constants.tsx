@@ -6,64 +6,55 @@ export const ACTIVITIES: Activity[] = [
     id: '1',
     name: 'Capoeira',
     instructor: 'Welder',
-    days: ['Segunda'],
-    schedule: ['19:30']
+    days: ['Segunda']
   },
   {
     id: '2',
     name: 'Karatê',
     instructor: 'Japa',
-    days: ['Terça'],
-    schedule: ['19:00']
+    days: ['Terça']
   },
   {
     id: '3',
     name: 'Boxe',
     instructor: 'Victor',
-    days: ['Quarta'],
-    schedule: ['19:30']
+    days: ['Quarta']
   },
   {
     id: '4',
     name: 'Jiu-jitsu',
     instructor: 'Wendel',
-    days: ['Quinta'],
-    schedule: ['19:30']
+    days: ['Quinta']
   },
   {
     id: '5',
     name: 'Ritmo dança',
     instructor: 'Lilian',
-    days: ['Sexta'],
-    schedule: ['17:30']
+    days: ['Sexta']
   },
   {
     id: '6',
     name: 'Futebol',
     instructor: 'Italo',
-    days: ['Segunda', 'Quarta', 'Quinta'],
-    schedule: ['08:00', '16:30']
+    days: ['Segunda', 'Quarta', 'Quinta']
   },
   {
     id: '7',
     name: 'Pilates',
     instructor: 'Fernanda',
-    days: ['Terça', 'Quinta'],
-    schedule: ['08:00', '09:00']
+    days: ['Terça', 'Quinta']
   },
   {
     id: '8',
     name: 'Balé',
     instructor: 'Luana',
-    days: ['Sábado'],
-    schedule: ['09:00', '10:30']
+    days: ['Sábado']
   },
   {
     id: '9',
     name: 'Hip Hop',
     instructor: 'Jhonatan, Flávia e Ewentor',
-    days: ['Sábado'],
-    schedule: ['16:00']
+    days: ['Sábado']
   }
 ];
 
