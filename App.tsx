@@ -6,7 +6,7 @@ import AdminDashboard from './components/AdminDashboard';
 import Login from './components/Login';
 import { ACTIVITIES, FORM_STEPS } from './constants';
 import { FormData, SelectedActivity } from './types';
-
+import { sendToGoogleSheets } from './services/sheets';
 const INITIAL_DATA: FormData = {
   fullName: '',
   birthPlace: '',
@@ -222,12 +222,19 @@ const App: React.FC = () => {
   const DocumentPreview = ({ data, onClose, isAdmin }: { data: FormData, onClose: () => void, isAdmin: boolean }) => {
     const handlePrint = () => window.print();
 
-    const handleFinalConfirm = () => {
-      if (!isAdmin) {
-        setView('success');
-      }
-      onClose();
-    };
+const handleFinalConfirm = async () => {
+  try {
+    await sendToGoogleSheets(data);
+
+    if (!isAdmin) {
+      setView('success');
+    }
+    onClose();
+  } catch (err) {
+    alert('Erro ao enviar ficha. Tente novamente.');
+    console.error(err);
+  }
+};
 
     return (
       <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-0 md:p-4 print-container">
