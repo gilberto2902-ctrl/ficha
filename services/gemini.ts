@@ -1,8 +1,10 @@
 
 import { GoogleGenAI } from "@google/genai";
 
+// Standardizing Gemini API call to follow strict guidelines
 export async function askGemini(question: string) {
   try {
+    // Guidelines require initializing with process.env.API_KEY directly as a named parameter
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
@@ -13,12 +15,13 @@ export async function askGemini(question: string) {
         
         Pergunta do usuário: ${question}
         
-        Responda de forma gentil e útil em português do Brasil. Se for uma dúvida sobre benefícios sociais (como CADÚnico ou Bolsa Família), explique brevemente o que são e sua importância no contexto social da associação.
+        Responda de forma gentil e útil em português do Brasil. Se for uma dúvida sobre benefícios sociais, explique sua importância.
       `,
     });
+    // The response.text is a property, not a method.
     return response.text;
   } catch (error) {
     console.error("Gemini Error:", error);
-    return "Desculpe, tive um problema ao processar sua dúvida. Por favor, tente novamente mais tarde.";
+    return "Desculpe, tive um problema ao processar sua dúvida.";
   }
 }

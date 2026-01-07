@@ -13,7 +13,7 @@ export interface SelectedActivity {
 export interface FormData {
   id?: string;
   submissionDate?: string;
-  // Seção 1: Dados Pessoais
+  // 1. DADOS PESSOAIS
   fullName: string;
   birthPlace: string;
   birthDate: string;
@@ -22,21 +22,21 @@ export interface FormData {
   issuingBody: string;
   issueDate: string;
   cpf: string;
-  gender: 'M' | 'F' | '';
+  gender: 'F' | 'M' | '';
   hasChildren: 'Sim' | 'Não' | '';
   childrenCount: string;
-  isDisabled: boolean;
+  isDisabled: 'Sim' | 'Não' | '';
   disabilityType: string;
 
-  // Seção 2: Escolaridade
+  // 2. ESCOLARIDADE
   schoolName: string;
   schoolingLevel: string;
   schoolGrade: string;
-  schoolPeriod: 'Manhã' | 'Tarde' | 'Noite' | 'Integral' | '';
-  extraCourseStatus: 'Sim' | 'Não' | '';
+  schoolPeriod: 'Manhã' | 'Tarde' | 'Noite' | 'Integral' | 'Não' | '';
+  extraCourseStatus: 'Cursando' | 'Concluído' | 'Não' | '';
   extraCourseName: string;
 
-  // Seção 3: Endereço & Moradia
+  // 3. ENDEREÇO
   address: string;
   addressNo: string;
   city: string;
@@ -55,24 +55,24 @@ export interface FormData {
   roomCount: string;
   parentsLiveTogether: 'Sim' | 'Não' | '';
   peopleInHouse: string;
-  livesWith: string[]; // ['Mãe', 'Pai', 'Irmãos', 'Avós', 'Filho', 'Madrasta', 'Padrasto', 'Outros']
+  livesWith: string[];
 
-  // Seção 4: Familiares
+  // 4. FAMILIARES
   fatherName: string;
+  fatherProfession: string;
   fatherBirthDate: string;
   fatherDeceased: 'Sim' | 'Não' | '';
-  fatherProfession: string;
   fatherSalary: string;
   fatherUnemployed: 'Sim' | 'Não' | '';
   
   motherName: string;
+  motherProfession: string;
   motherBirthDate: string;
   motherDeceased: 'Sim' | 'Não' | '';
-  motherProfession: string;
   motherSalary: string;
   motherUnemployed: 'Sim' | 'Não' | '';
 
-  // Seção 5: Socioeconômico
+  // 5. SOCIOECONÔMICO & COMPLEMENTARES
   workingCountRegistered: string;
   workingCountAutonomous: string;
   pensionCount: string;
@@ -80,22 +80,22 @@ export interface FormData {
   hasMedicalInsurance: 'Sim' | 'Não' | '';
   crasReferenced: 'Sim' | 'Não' | '';
   crasDetails: string;
-  hasCadUnico: 'Sim' | 'Não' | '';
+  hasCadUnico: string;
   benefits: {
-    bolsaFamilia: string;
-    bpcLoas: string;
-    auxAluguel: string;
-    idJovem: string;
+    bolsaFamilia: 'Sim' | 'Não' | '';
+    bpcLoas: 'Sim' | 'Não' | '';
+    idJovem: 'Sim' | 'Não' | '';
+    outros: 'Sim' | 'Não' | '';
   };
 
-  // Seção 6: Saúde & Atividades
+  // SAÚDE & ATIVIDADES
   healthTreatment: 'Sim' | 'Não' | '';
   healthDetails: string;
   continuousMedication: 'Sim' | 'Não' | '';
   medicationDetails: string;
   selectedActivities: SelectedActivity[];
 
-  // Seção 7: Confirmação
+  // CONFIRMAÇÃO
   imageRightsConsent: boolean;
   veracityConsent: boolean;
 }

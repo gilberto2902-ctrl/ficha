@@ -6,74 +6,141 @@ import AdminDashboard from './components/AdminDashboard';
 import Login from './components/Login';
 import { ACTIVITIES, FORM_STEPS } from './constants';
 import { FormData, SelectedActivity } from './types';
-import { sendToGoogleSheets } from './services/sheets';
+
 const INITIAL_DATA: FormData = {
-  fullName: '',
-  birthPlace: '',
-  birthDate: '',
-  age: '',
-  rg: '',
-  issuingBody: '',
-  issueDate: '',
-  cpf: '',
-  gender: '',
-  hasChildren: '',
-  childrenCount: '',
-  isDisabled: false,
-  disabilityType: '',
-  schoolName: '',
-  schoolingLevel: '',
-  schoolGrade: '',
-  schoolPeriod: '',
-  extraCourseStatus: '',
-  extraCourseName: '',
-  address: '',
-  addressNo: '',
-  city: 'Guarulhos',
-  neighborhood: '',
-  complement: '',
-  zipCode: '',
-  referencePoint: '',
-  whatsapp: '',
-  email: '',
-  parentWhatsapp: '',
-  telRecado: '',
-  housingType: '',
-  housingValue: '',
-  cedidaBy: '',
-  constructionType: '',
-  roomCount: '',
-  parentsLiveTogether: '',
-  peopleInHouse: '',
-  livesWith: [],
-  fatherName: '',
-  fatherBirthDate: '',
-  fatherDeceased: 'Não',
-  fatherProfession: '',
-  fatherSalary: '',
-  fatherUnemployed: 'Não',
-  motherName: '',
-  motherBirthDate: '',
-  motherDeceased: 'Não',
-  motherProfession: '',
-  motherSalary: '',
-  motherUnemployed: 'Não',
-  workingCountRegistered: '',
-  workingCountAutonomous: '',
-  pensionCount: '',
-  familyIncome: '',
-  hasMedicalInsurance: 'Não',
-  crasReferenced: 'Não',
-  crasDetails: '',
-  hasCadUnico: 'Não',
-  benefits: { bolsaFamilia: 'Não', bpcLoas: 'Não', auxAluguel: 'Não', idJovem: 'Não' },
-  healthTreatment: 'Não',
-  healthDetails: '',
-  continuousMedication: 'Não',
-  medicationDetails: '',
-  selectedActivities: [],
-  imageRightsConsent: false,
-  veracityConsent: false
+  fullName: '', birthPlace: '', birthDate: '', age: '', rg: '', issuingBody: '', issueDate: '', cpf: '', gender: '',
+  hasChildren: '', childrenCount: '', isDisabled: '', disabilityType: '', schoolName: '', schoolingLevel: '',
+  schoolGrade: '', schoolPeriod: '', extraCourseStatus: '', extraCourseName: '', address: '', addressNo: '',
+  city: 'Guarulhos', neighborhood: '', complement: '', zipCode: '', referencePoint: '', whatsapp: '', email: '',
+  parentWhatsapp: '', telRecado: '', housingType: '', housingValue: '', cedidaBy: '', constructionType: '',
+  roomCount: '', parentsLiveTogether: '', peopleInHouse: '', livesWith: [], fatherName: '', fatherBirthDate: '',
+  fatherDeceased: 'Não', fatherProfession: '', fatherSalary: '', fatherUnemployed: 'Não', motherName: '',
+  motherBirthDate: '', motherDeceased: 'Não', motherProfession: '', motherSalary: '', motherUnemployed: 'Não',
+  workingCountRegistered: '', workingCountAutonomous: '', pensionCount: '', familyIncome: '', hasMedicalInsurance: 'Não',
+  crasReferenced: 'Não', crasDetails: '', hasCadUnico: '', benefits: { bolsaFamilia: '', bpcLoas: '', idJovem: '', outros: '' },
+  healthTreatment: 'Não', healthDetails: '', continuousMedication: 'Não', medicationDetails: '', selectedActivities: [],
+  imageRightsConsent: false, veracityConsent: false
+};
+
+const DocumentPreview: React.FC<{ data: FormData; onClose: () => void; isAdmin: boolean; onFinalConfirm: () => void }> = ({ data, onClose, isAdmin, onFinalConfirm }) => {
+  const formattedTime = data.submissionDate 
+    ? new Date(data.submissionDate).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    : '--:--:--';
+  const formattedDate = data.submissionDate 
+    ? new Date(data.submissionDate).toLocaleDateString('pt-BR')
+    : '--/--/----';
+
+  const handleDownloadPDF = () => {
+    window.print();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[200] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-0 md:p-6 print-container overflow-y-auto">
+      <div className="bg-white w-full max-w-4xl min-h-screen md:min-h-0 md:rounded-[40px] shadow-2xl animate-in print-content mb-10 overflow-hidden">
+        
+        <div className="sticky top-0 bg-white border-b border-slate-100 p-6 flex justify-between items-center z-10 no-print">
+          <div className="flex items-center gap-3">
+            <div className="w-3 h-3 rounded-full bg-blue-600"></div>
+            <h3 className="font-black uppercase tracking-widest text-[10px] text-slate-400">
+              Ficha de Rematrícula 2026
+            </h3>
+          </div>
+          <button onClick={onClose} className="w-10 h-10 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center transition-all">
+            <i className="fa-solid fa-xmark text-slate-400"></i>
+          </button>
+        </div>
+
+        <div className="p-8 md:p-16 text-slate-800 bg-white">
+          <div className="border-4 border-slate-900 p-8 relative">
+            <div className="flex justify-between items-start mb-10">
+               <div className="flex items-center gap-4">
+                 {/* Logo AB Removida conforme pedido */}
+                 <div>
+                   <h1 className="text-xl font-black uppercase text-slate-900 leading-none">Associação Amor e Bondade</h1>
+                   <p className="text-[10px] font-bold text-slate-500 uppercase mt-1 tracking-widest">Ficha de Inscrição 2026 - Digital</p>
+                 </div>
+               </div>
+               <div className="border-2 border-slate-900 px-6 py-4 rounded-lg text-center bg-slate-50">
+                 <p className="text-[8px] font-black uppercase text-slate-400 mb-1">Inscrição Nº</p>
+                 <p className="text-xl font-black text-slate-900">{data.id}</p>
+                 <p className="text-[7px] font-bold text-slate-400 uppercase mt-1">Hora: {formattedTime}</p>
+               </div>
+            </div>
+
+            <div className="space-y-6 text-[10px] leading-relaxed">
+              <section>
+                <h4 className="font-black uppercase text-[#1d5ba5] mb-3 border-b border-slate-100 pb-1">1. Dados do Aluno</h4>
+                <div className="grid grid-cols-2 gap-y-2">
+                  <p className="col-span-2"><strong>NOME DO ALUNO:</strong> {data.fullName.toUpperCase()}</p>
+                  <p><strong>DATA DE NASCIMENTO:</strong> {data.birthDate} ({data.age} ANOS)</p>
+                  <p><strong>CPF:</strong> {data.cpf}</p>
+                  <p><strong>RG:</strong> {data.rg || '---'}</p>
+                  <p><strong>SEXO:</strong> {data.gender === 'F' ? 'FEMININO' : 'MASCULINO'}</p>
+                  <p><strong>DEFICIENTE:</strong> {data.isDisabled === 'Sim' ? `SIM - ${data.disabilityType}` : 'NÃO'}</p>
+                </div>
+              </section>
+
+              <section>
+                <h4 className="font-black uppercase text-[#1d5ba5] mb-3 border-b border-slate-100 pb-1">2. Escolaridade</h4>
+                <div className="grid grid-cols-2 gap-y-2">
+                  <p className="col-span-2"><strong>ESCOLA:</strong> {data.schoolName.toUpperCase()}</p>
+                  <p><strong>SÉRIE EM 2026:</strong> {data.schoolGrade}</p>
+                  <p><strong>PERÍODO:</strong> {data.schoolPeriod.toUpperCase()}</p>
+                </div>
+              </section>
+
+              <section>
+                <h4 className="font-black uppercase text-[#1d5ba5] mb-3 border-b border-slate-100 pb-1">3. Endereço e Moradia</h4>
+                <div className="grid grid-cols-2 gap-y-2">
+                  <p className="col-span-2"><strong>ENDEREÇO:</strong> {data.address}, {data.addressNo} - {data.neighborhood}</p>
+                  <p><strong>MORADIA:</strong> {data.housingType}</p>
+                  <p><strong>CONSTRUÇÃO:</strong> {data.constructionType}</p>
+                  <p className="col-span-2"><strong>CONTATO WHATSAPP:</strong> {data.whatsapp}</p>
+                </div>
+              </section>
+
+              <section>
+                <h4 className="font-black uppercase text-[#1d5ba5] mb-3 border-b border-slate-100 pb-1">4. Benefícios Sociais</h4>
+                <div className="grid grid-cols-2 gap-y-2">
+                  <p><strong>BOLSA FAMÍLIA:</strong> {data.benefits.bolsaFamilia}</p>
+                  <p><strong>BPC/LOAS:</strong> {data.benefits.bpcLoas}</p>
+                  <p><strong>ID JOVEM:</strong> {data.benefits.idJovem}</p>
+                  <p><strong>OUTROS:</strong> {data.benefits.outros}</p>
+                </div>
+              </section>
+
+              <div className="border border-slate-200 rounded-lg p-4 bg-slate-50">
+                <h4 className="font-black uppercase text-[#1d5ba5] mb-2">Atividades Selecionadas</h4>
+                <div className="flex flex-wrap gap-4">
+                  {data.selectedActivities.map(sa => {
+                    const act = ACTIVITIES.find(a => a.id === sa.activityId);
+                    return act ? <div key={act.id} className="bg-white border border-slate-200 px-3 py-1 rounded font-bold uppercase text-[9px]">{act.name}</div> : null;
+                  })}
+                </div>
+              </div>
+
+              <div className="pt-10 border-t border-slate-100 flex justify-between items-end">
+                <div>
+                   <p className="font-black uppercase text-[8px] text-slate-400">Data e Hora do Cadastro:</p>
+                   <p className="text-xs font-black text-slate-900">{formattedDate} às {formattedTime}</p>
+                </div>
+                <div className="text-center w-64">
+                  <div className="border-t border-slate-900 mt-4 pt-1 font-black uppercase text-[8px]">Assinatura do Responsável</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-12 no-print space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <button onClick={handleDownloadPDF} className="py-5 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2"><i className="fa-solid fa-file-pdf"></i> Baixar em PDF</button>
+              <button onClick={onFinalConfirm} className="py-5 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-black transition-all flex items-center justify-center gap-2"><i className="fa-solid fa-check"></i> Finalizar Cadastro</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 const App: React.FC = () => {
@@ -89,436 +156,177 @@ const App: React.FC = () => {
     if (authStatus === 'true') setIsAuth(true);
   }, []);
 
-  const handleInputChange = (field: keyof FormData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleBenefitChange = (benefit: keyof FormData['benefits'], value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      benefits: { ...prev.benefits, [benefit]: value }
-    }));
-  };
+  const handleInputChange = (field: keyof FormData, value: any) => setFormData(prev => ({ ...prev, [field]: value }));
+  const handleBenefitChange = (benefit: keyof FormData['benefits'], value: string) => setFormData(prev => ({ ...prev, benefits: { ...prev.benefits, [benefit]: value } }));
 
   const toggleActivity = (activityId: string) => {
     const isSelected = formData.selectedActivities.some(a => a.activityId === activityId);
     if (isSelected) {
-      setFormData(prev => ({
-        ...prev,
-        selectedActivities: prev.selectedActivities.filter(a => a.activityId !== activityId)
-      }));
+      setFormData(prev => ({ ...prev, selectedActivities: prev.selectedActivities.filter(a => a.activityId !== activityId) }));
     } else {
-      if (formData.selectedActivities.length >= 2) {
-        alert("Você pode selecionar no máximo 2 atividades.");
-        return;
-      }
-      const activity = ACTIVITIES.find(a => a.id === activityId);
-      if (activity) {
-        setFormData(prev => ({
-          ...prev,
-          selectedActivities: [...prev.selectedActivities, { activityId }]
-        }));
-      }
+      if (formData.selectedActivities.length >= 2) { alert("Máximo 2 atividades."); return; }
+      setFormData(prev => ({ ...prev, selectedActivities: [...prev.selectedActivities, { activityId }] }));
     }
-  };
-
-  const checkDuplicateCpf = (cpf: string) => {
-    const saved = localStorage.getItem('amor_bondade_submissions');
-    if (!saved) return false;
-    const submissions: FormData[] = JSON.parse(saved);
-    const sanitizedCpf = cpf.replace(/\D/g, '');
-    if (!sanitizedCpf || sanitizedCpf.length < 11) return false;
-    return submissions.some(s => s.cpf.replace(/\D/g, '') === sanitizedCpf);
-  };
-
-  const isCpfDuplicate = checkDuplicateCpf(formData.cpf);
-
-  const saveSubmission = (data: FormData) => {
-    const saved = localStorage.getItem('amor_bondade_submissions');
-    const submissions: any[] = saved ? JSON.parse(saved) : [];
-    const counter = parseInt(localStorage.getItem('amor_bondade_id_counter') || '0') + 1;
-    const id = counter.toString().padStart(2, '0');
-    localStorage.setItem('amor_bondade_id_counter', counter.toString());
-    
-    const newSubmission = { ...data, id, submissionDate: new Date().toISOString() };
-    submissions.push(newSubmission);
-    localStorage.setItem('amor_bondade_submissions', JSON.stringify(submissions));
-    return newSubmission;
   };
 
   const handleNextStep = () => {
-    if (step === 0) {
-      if (!formData.fullName.trim()) {
-        alert('Por favor, informe o Nome Completo do aluno.');
-        return;
-      }
-      if (!formData.cpf.trim() || formData.cpf.replace(/\D/g, '').length < 11) {
-        alert('Por favor, informe um CPF válido para continuar.');
-        return;
-      }
-      if (checkDuplicateCpf(formData.cpf)) {
-        alert('⚠️ ESTE CPF JÁ ESTÁ CADASTRADO: Identificamos que já existe uma inscrição ativa para este CPF (' + formData.cpf + ').');
-        return;
-      }
-    }
+    if (step === 0 && (!formData.fullName.trim() || !formData.cpf.trim())) { alert('Nome e CPF obrigatórios.'); return; }
     setStep(s => Math.min(FORM_STEPS.length - 1, s + 1));
   };
 
   const handleFinalAction = (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.selectedActivities.length === 0) { alert('Selecione pelo menos 1 atividade.'); setStep(5); return; }
+    if (!formData.imageRightsConsent || !formData.veracityConsent) { alert('Aceite os termos para continuar.'); return; }
     
-    if (formData.selectedActivities.length === 0) {
-      alert('⚠️ ATIVIDADE OBRIGATÓRIA: Você precisa selecionar pelo menos 1 atividade para realizar a rematrícula.');
-      setStep(5);
-      return;
-    }
-
-    if (!formData.imageRightsConsent || !formData.veracityConsent) {
-      alert('É necessário aceitar os termos de compromisso para finalizar.');
-      return;
-    }
-
-    if (checkDuplicateCpf(formData.cpf)) {
-      alert('❌ ERRO NO ENVIO: O CPF informado já possui um cadastro no sistema.');
-      return;
-    }
-
-    const savedData = saveSubmission(formData);
-    setPreviewData(savedData);
+    const subDate = new Date().toISOString();
+    const newId = `${new Date().getFullYear()}${Math.floor(1000 + Math.random() * 9000)}`;
+    const newSub = { ...formData, id: newId, submissionDate: subDate };
+    
+    const saved = localStorage.getItem('amor_bondade_submissions');
+    const subs = saved ? JSON.parse(saved) : [];
+    subs.push(newSub);
+    localStorage.setItem('amor_bondade_submissions', JSON.stringify(subs));
+    
+    setPreviewData(newSub);
     setShowDocPreview(true);
   };
 
-  const handleLogout = () => {
-    setIsAuth(false);
-    sessionStorage.removeItem('amor_bondade_auth');
-    setView('form');
-  };
-
-  const YesNoToggle = ({ label, value, onChange, colorClass = "bg-blue-600" }: { label: string, value: string | boolean, onChange: (val: any) => void, colorClass?: string }) => {
-    const isYes = value === 'Sim' || value === true;
-    return (
-      <div className="flex flex-col gap-1 w-full">
-        <label className="text-[10px] font-black uppercase text-slate-500 tracking-wider mb-1">{label}</label>
-        <div className="flex gap-2">
+  const MultiChoiceGroup = ({ label, options, value, onChange, gridCols = "grid-cols-2", colorClass = "bg-[#1d5ba5]" }: { label: string; options: string[]; value: string; onChange: (v: any) => void; gridCols?: string; colorClass?: string }) => (
+    <div className="space-y-2">
+      <label className="text-[10px] font-black uppercase text-[#1d5ba5] tracking-widest">{label}</label>
+      <div className={`grid ${gridCols} gap-2`}>
+        {options.map(opt => (
           <button 
-            type="button" 
-            onClick={() => onChange(typeof value === 'boolean' ? true : 'Sim')} 
-            className={`flex-1 py-3 rounded-2xl font-black text-xs uppercase tracking-widest border-2 transition-all ${isYes ? `${colorClass} border-transparent text-white shadow-lg` : 'border-slate-100 text-slate-300 hover:border-slate-200 bg-white'}`}
+            key={opt} type="button" onClick={() => onChange(opt)}
+            className={`py-3 px-4 rounded-xl border-2 font-bold text-[10px] uppercase transition-all ${value === opt ? `${colorClass} text-white border-transparent shadow-lg scale-[1.02]` : 'bg-white text-slate-400 border-slate-100 hover:border-slate-200'}`}
           >
-            Sim
+            {opt}
           </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  const CheckboxGroup = ({ label, options, values, onChange }: { label: string; options: string[]; values: string[]; onChange: (v: string[]) => void }) => (
+    <div className="space-y-2">
+      <label className="text-[10px] font-black uppercase text-[#1d5ba5] tracking-widest">{label}</label>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        {options.map(opt => (
           <button 
-            type="button" 
-            onClick={() => onChange(typeof value === 'boolean' ? false : 'Não')} 
-            className={`flex-1 py-3 rounded-2xl font-black text-xs uppercase tracking-widest border-2 transition-all ${!isYes ? `${colorClass} border-transparent text-white shadow-lg` : 'border-slate-100 text-slate-300 hover:border-slate-200 bg-white'}`}
+            key={opt} type="button" 
+            onClick={() => {
+              const newValues = values.includes(opt) ? values.filter(v => v !== opt) : [...values, opt];
+              onChange(newValues);
+            }}
+            className={`py-3 px-4 rounded-xl border-2 font-bold text-[9px] uppercase transition-all ${values.includes(opt) ? 'bg-orange-500 text-white border-transparent shadow-md' : 'bg-white text-slate-400 border-slate-100'}`}
           >
-            Não
+            {opt}
           </button>
-        </div>
+        ))}
       </div>
-    );
-  };
+    </div>
+  );
 
-  const DocumentPreview = ({ data, onClose, isAdmin }: { data: FormData, onClose: () => void, isAdmin: boolean }) => {
-    const handlePrint = () => window.print();
-
-const handleFinalConfirm = async () => {
-  try {
-    await sendToGoogleSheets(data);
-
-    if (!isAdmin) {
-      setView('success');
-    }
-    onClose();
-  } catch (err) {
-    alert('Erro ao enviar ficha. Tente novamente.');
-    console.error(err);
-  }
-};
-
-    return (
-      <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-0 md:p-4 print-container">
-        <div className="bg-white w-full max-w-4xl max-h-screen md:max-h-[95vh] overflow-y-auto md:rounded-[40px] shadow-2xl animate-in zoom-in-95 duration-300 print-content">
-          <div className="sticky top-0 bg-slate-900 text-white p-6 flex justify-between items-center z-10 no-print">
-            <div className="flex items-center gap-4">
-              <h3 className="font-black uppercase tracking-widest text-sm">Ficha de Rematrícula Nº {data.id}</h3>
-            </div>
-            {!isAdmin && (
-               <button onClick={onClose} className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
-                 <i className="fa-solid fa-xmark"></i>
-               </button>
-            )}
-          </div>
-          
-          <div className="p-8 md:p-12 text-slate-800 bg-white relative">
-            <div className="flex flex-col items-center border-b-2 border-slate-900 pb-8 mb-10 text-center">
-               <h1 className="text-3xl font-black uppercase text-[#1d5ba5] tracking-tight">ASSOCIAÇÃO AMOR E BONDADE</h1>
-               <h2 className="text-lg font-bold uppercase text-slate-600 mt-1">FICHA DE INSCRIÇÃO - 2026</h2>
-               <p className="text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-[0.2em]">Unidade I - Guarulhos - SP</p>
-               <div className="mt-6 border-2 border-slate-900 px-6 py-2 rounded-xl bg-slate-50">
-                 <p className="text-[8px] font-black uppercase text-slate-500">Número de Inscrição</p>
-                 <p className="text-2xl font-black">{data.id}</p>
-               </div>
-            </div>
-
-            <div className="space-y-6 text-[10px] leading-tight">
-              <section className="space-y-1">
-                <h4 className="font-black border-b border-slate-900 uppercase">1. DADOS PESSOAIS DO ALUNO</h4>
-                <div className="grid grid-cols-4 gap-2 border border-slate-900 p-2 rounded">
-                  <div className="col-span-4 uppercase"><strong>NOME COMPLETO:</strong> {data.fullName}</div>
-                  <div className="col-span-4 uppercase"><strong>E-MAIL:</strong> {data.email || 'Não informado'}</div>
-                  <div className="col-span-2 uppercase"><strong>NATURALIDADE/UF:</strong> {data.birthPlace}</div>
-                  <div><strong>DATA NASC:</strong> {data.birthDate}</div>
-                  <div><strong>IDADE:</strong> {data.age}</div>
-                  <div><strong>RG:</strong> {data.rg}</div>
-                  <div><strong>CPF:</strong> {data.cpf}</div>
-                  <div className="col-span-2 uppercase"><strong>SEXO:</strong> {data.gender === 'M' ? '( ) F (X) M' : '(X) F ( ) M'}</div>
-                </div>
-              </section>
-
-              <section className="space-y-1">
-                <h4 className="font-black border-b border-slate-900 uppercase">2. ESCOLARIDADE</h4>
-                <div className="grid grid-cols-2 gap-2 border border-slate-900 p-2 rounded">
-                  <div className="col-span-2 uppercase"><strong>ESCOLA:</strong> {data.schoolName}</div>
-                  <div className="uppercase"><strong>SÉRIE:</strong> {data.schoolGrade}</div>
-                  <div className="uppercase"><strong>PERÍODO:</strong> {data.schoolPeriod}</div>
-                </div>
-              </section>
-
-              <section className="space-y-1">
-                <h4 className="font-black border-b border-slate-900 uppercase">3. ENDEREÇO E CONTATO</h4>
-                <div className="grid grid-cols-4 gap-2 border border-slate-900 p-2 rounded">
-                  <div className="col-span-3 uppercase"><strong>ENDEREÇO:</strong> {data.address}, {data.addressNo}</div>
-                  <div><strong>CEP:</strong> {data.zipCode}</div>
-                  <div className="col-span-2 uppercase"><strong>BAIRRO:</strong> {data.neighborhood}</div>
-                  <div className="col-span-2"><strong>CONTATO:</strong> {data.whatsapp}</div>
-                </div>
-              </section>
-
-              <section className="space-y-1">
-                <h4 className="font-black border-b border-slate-900 uppercase">4. ATIVIDADES</h4>
-                <div className="grid grid-cols-1 gap-1 border border-slate-900 p-2 rounded">
-                  {data.selectedActivities.map(sa => {
-                    const act = ACTIVITIES.find(a => a.id === sa.activityId);
-                    return (
-                      <div key={sa.activityId} className="flex justify-between items-center text-[9px]">
-                        <span className="font-bold uppercase">● {act?.name}</span>
-                        <span className="italic">Instrutor: {act?.instructor}</span>
-                      </div>
-                    );
-                  })}
-                  {data.selectedActivities.length === 0 && <p className="italic text-slate-400">Nenhuma atividade selecionada</p>}
-                </div>
-              </section>
-
-              <section className="space-y-1">
-                <h4 className="font-black border-b border-slate-900 uppercase">5. BENEFÍCIOS SOCIAIS</h4>
-                <div className="grid grid-cols-4 gap-2 border border-slate-900 p-2 rounded">
-                  <div className="uppercase"><strong>Bolsa Família:</strong> {data.benefits.bolsaFamilia}</div>
-                  <div className="uppercase"><strong>BPC/LOAS:</strong> {data.benefits.bpcLoas}</div>
-                  <div className="uppercase"><strong>Aux. Aluguel:</strong> {data.benefits.auxAluguel}</div>
-                  <div className="uppercase"><strong>ID Jovem:</strong> {data.benefits.idJovem}</div>
-                </div>
-              </section>
-
-              <div className="text-center mt-12 space-y-4">
-                <p className="text-[10px] font-bold">Guarulhos, {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
-                <div className="pt-10 flex justify-center">
-                  <div className="w-72 border-t border-slate-900 text-center pt-1 font-black uppercase text-[8px]">Assinatura do Responsável</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-8 bg-slate-50 border-t border-slate-200 flex flex-wrap justify-center gap-4 no-print">
-            {isAdmin ? (
-              <>
-                <button onClick={handlePrint} className="px-6 py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] flex items-center justify-center gap-3 flex-1 shadow-xl hover:bg-blue-700 active:scale-95 uppercase tracking-widest min-w-[150px]">
-                  <i className="fa-solid fa-download"></i> Baixar PDF
-                </button>
-                <button onClick={handlePrint} className="px-6 py-4 bg-slate-700 text-white rounded-2xl font-black text-[10px] flex items-center justify-center gap-3 flex-1 shadow-xl hover:bg-slate-800 active:scale-95 uppercase tracking-widest min-w-[150px]">
-                  <i className="fa-solid fa-print"></i> Imprimir Ficha
-                </button>
-                <button onClick={onClose} className="px-6 py-4 bg-slate-200 text-slate-600 rounded-2xl font-black text-[10px] flex-1 shadow-md hover:bg-slate-300 active:scale-95 uppercase tracking-widest min-w-[150px]">
-                  Fechar
-                </button>
-              </>
-            ) : (
-              <button 
-                onClick={handleFinalConfirm} 
-                className="px-10 py-5 bg-green-600 text-white rounded-3xl font-black text-xs flex-1 shadow-2xl hover:bg-green-700 active:scale-95 uppercase tracking-widest transition-all"
-              >
-                Confirmar e Finalizar Envio
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderFormStep = () => {
+  const renderStep = () => {
     switch (step) {
       case 0: return (
-        <div className="space-y-6 animate-in fade-in duration-300">
-          <SectionHeader num={1} title="Identificação" colorClass="bg-blue-600" />
-          <Input label="Nome Completo do Aluno" value={formData.fullName} onChange={e => handleInputChange('fullName', e.target.value)} required />
-          <Input label="E-mail do Aluno ou Responsável" type="email" placeholder="exemplo@email.com" value={formData.email} onChange={e => handleInputChange('email', e.target.value)} />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input label="Data de Nascimento" type="date" value={formData.birthDate} onChange={e => handleInputChange('birthDate', e.target.value)} />
-            <Input 
-              label="CPF *" 
-              placeholder="000.000.000-00" 
-              value={formData.cpf} 
-              error={isCpfDuplicate ? '⚠️ Este CPF já está cadastrado!' : ''}
-              onChange={e => handleInputChange('cpf', e.target.value)} 
-              required
-            />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Input label="RG" value={formData.rg} onChange={e => handleInputChange('rg', e.target.value)} />
+        <div className="space-y-6 animate-in">
+          <h2 className="text-xl font-black text-slate-800 uppercase">1. Dados do Aluno</h2>
+          <Input label="Nome do Aluno" value={formData.fullName} onChange={e => handleInputChange('fullName', e.target.value)} required />
+          <div className="grid grid-cols-2 gap-4">
             <Input label="Naturalidade/UF" value={formData.birthPlace} onChange={e => handleInputChange('birthPlace', e.target.value)} />
+            <Input label="Data de Nascimento" type="date" value={formData.birthDate} onChange={e => handleInputChange('birthDate', e.target.value)} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
             <Input label="Idade Atual" type="number" value={formData.age} onChange={e => handleInputChange('age', e.target.value)} />
+            <Input label="CPF" placeholder="000.000.000-00" value={formData.cpf} onChange={e => handleInputChange('cpf', e.target.value)} required />
           </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Sexo</label>
-            <div className="flex gap-2">
-              {['M', 'F'].map(s => (
-                <button key={s} type="button" onClick={() => handleInputChange('gender', s)} className={`flex-1 py-3 rounded-2xl font-black text-xs uppercase tracking-widest border-2 transition-all ${formData.gender === s ? 'bg-blue-600 border-transparent text-white shadow-lg' : 'border-slate-100 text-slate-300 bg-white'}`}>
-                  {s === 'M' ? 'Masculino' : 'Feminino'}
-                </button>
-              ))}
-            </div>
+          <MultiChoiceGroup label="Sexo" options={['F', 'M']} value={formData.gender} onChange={v => handleInputChange('gender', v)} />
+          <div className="grid grid-cols-2 gap-4 items-end">
+            <MultiChoiceGroup label="Deficiente?" options={['Sim', 'Não']} value={formData.isDisabled} onChange={v => handleInputChange('isDisabled', v)} />
+            {formData.isDisabled === 'Sim' && <Input label="Qual deficiência?" value={formData.disabilityType} onChange={e => handleInputChange('disabilityType', e.target.value)} />}
           </div>
-          <YesNoToggle label="Possui Alguma Deficiência?" value={formData.isDisabled} onChange={v => handleInputChange('isDisabled', v)} />
-          {formData.isDisabled && <Input label="Descreva a Deficiência" value={formData.disabilityType} onChange={e => handleInputChange('disabilityType', e.target.value)} />}
         </div>
       );
       case 1: return (
-        <div className="space-y-6">
-          <SectionHeader num={2} title="Escola" colorClass="bg-orange-500" />
-          <Input label="Nome da Unidade Escolar" value={formData.schoolName} onChange={e => handleInputChange('schoolName', e.target.value)} />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input label="Série em 2026" value={formData.schoolGrade} onChange={e => handleInputChange('schoolGrade', e.target.value)} />
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase text-slate-500">Período Escolar</label>
-              <div className="grid grid-cols-2 gap-2">
-                {['Manhã', 'Tarde', 'Noite', 'Integral'].map(p => (
-                  <button key={p} type="button" onClick={() => handleInputChange('schoolPeriod', p)} className={`py-2 rounded-xl text-[10px] font-black uppercase border-2 transition-all ${formData.schoolPeriod === p ? 'bg-orange-500 text-white border-transparent' : 'bg-white text-slate-300'}`}>{p}</button>
-                ))}
-              </div>
-            </div>
-          </div>
+        <div className="space-y-6 animate-in">
+          <h2 className="text-xl font-black text-slate-800 uppercase">2. Escolaridade</h2>
+          <Input label="Nome da Escola" value={formData.schoolName} onChange={e => handleInputChange('schoolName', e.target.value)} />
+          <Input label="Série em 2026" value={formData.schoolGrade} onChange={e => handleInputChange('schoolGrade', e.target.value)} />
+          <MultiChoiceGroup label="Período" options={['Manhã', 'Tarde', 'Noite', 'Integral', 'Não']} value={formData.schoolPeriod} onChange={v => handleInputChange('schoolPeriod', v)} />
         </div>
       );
       case 2: return (
-        <div className="space-y-6">
-          <SectionHeader num={3} title="Localização" colorClass="bg-teal-500" />
+        <div className="space-y-6 animate-in">
+          <h2 className="text-xl font-black text-slate-800 uppercase">3. Endereço & Moradia</h2>
           <div className="grid grid-cols-4 gap-4">
-             <div className="col-span-3"><Input label="Logradouro (Rua/Av)" value={formData.address} onChange={e => handleInputChange('address', e.target.value)} /></div>
-             <Input label="Nº" value={formData.addressNo} onChange={e => handleInputChange('addressNo', e.target.value)} />
+            <div className="col-span-3"><Input label="Logradouro" value={formData.address} onChange={e => handleInputChange('address', e.target.value)} /></div>
+            <Input label="Nº" value={formData.addressNo} onChange={e => handleInputChange('addressNo', e.target.value)} />
           </div>
           <div className="grid grid-cols-2 gap-4">
-             <Input label="Bairro" value={formData.neighborhood} onChange={e => handleInputChange('neighborhood', e.target.value)} />
-             <Input label="CEP" value={formData.zipCode} onChange={e => handleInputChange('zipCode', e.target.value)} />
+            <Input label="Bairro" value={formData.neighborhood} onChange={e => handleInputChange('neighborhood', e.target.value)} />
+            <Input label="Cidade" value={formData.city} onChange={e => handleInputChange('city', e.target.value)} />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-             <Input label="WhatsApp de Contato" placeholder="(11) 90000-0000" value={formData.whatsapp} onChange={e => handleInputChange('whatsapp', e.target.value)} />
-             <Input label="Telefone de Recado" value={formData.telRecado} onChange={e => handleInputChange('telRecado', e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-slate-500">Situação da Moradia</label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {['Própria', 'Alugada', 'Financiada', 'Cedida'].map(m => (
-                <button key={m} type="button" onClick={() => handleInputChange('housingType', m)} className={`py-3 rounded-xl text-[10px] font-black uppercase border-2 transition-all ${formData.housingType === m ? 'bg-teal-600 text-white border-transparent' : 'bg-white text-slate-300'}`}>{m}</button>
-              ))}
-            </div>
-          </div>
+          <Input label="WhatsApp para Contato" value={formData.whatsapp} onChange={e => handleInputChange('whatsapp', e.target.value)} placeholder="(11) 90000-0000" />
+          <MultiChoiceGroup label="Tipo de Moradia" options={['Própria', 'Alugada', 'Financiada/CDHU', 'Cedida']} value={formData.housingType} onChange={v => handleInputChange('housingType', v)} />
+          <MultiChoiceGroup label="Tipo de Construção" options={['Bloco', 'Madeira', 'Mista', 'Palafita']} value={formData.constructionType} onChange={v => handleInputChange('constructionType', v)} />
         </div>
       );
       case 3: return (
-        <div className="space-y-6">
-          <SectionHeader num={4} title="Composição Familiar" colorClass="bg-purple-600" />
-          <div className="space-y-4 p-5 border-2 border-slate-50 rounded-[32px] bg-slate-50/50">
-            <p className="font-black text-[10px] uppercase text-slate-400 mb-2">Responsável: Pai</p>
-            <Input label="Nome Completo do Pai" value={formData.fatherName} onChange={e => handleInputChange('fatherName', e.target.value)} />
-            <YesNoToggle label="O Pai é Falecido?" value={formData.fatherDeceased} onChange={v => handleInputChange('fatherDeceased', v)} colorClass="bg-purple-600" />
-          </div>
-          <div className="space-y-4 p-5 border-2 border-slate-50 rounded-[32px] bg-slate-50/50">
-            <p className="font-black text-[10px] uppercase text-slate-400 mb-2">Responsável: Mãe</p>
-            <Input label="Nome Completo da Mãe" value={formData.motherName} onChange={e => handleInputChange('motherName', e.target.value)} />
-            <YesNoToggle label="A Mãe é Falecida?" value={formData.motherDeceased} onChange={v => handleInputChange('motherDeceased', v)} colorClass="bg-purple-600" />
+        <div className="space-y-6 animate-in">
+          <h2 className="text-xl font-black text-slate-800 uppercase">4. Dados Familiares</h2>
+          <Input label="Nome do Pai" value={formData.fatherName} onChange={e => handleInputChange('fatherName', e.target.value)} />
+          <Input label="Nome da Mãe" value={formData.motherName} onChange={e => handleInputChange('motherName', e.target.value)} />
+          <div className="bg-slate-50 p-6 rounded-[32px] space-y-4 border-2 border-slate-100">
+             <p className="font-black text-[10px] text-blue-600 uppercase">Composição Familiar</p>
+             <CheckboxGroup label="Mora Com" options={['Mãe', 'Pai', 'Irmãos', 'Avós', 'Filho', 'Madrasta', 'Padrasto', 'Outros']} values={formData.livesWith} onChange={v => handleInputChange('livesWith', v)} />
           </div>
         </div>
       );
       case 4: return (
-        <div className="space-y-6">
-          <SectionHeader num={5} title="Socioeconômico" colorClass="bg-green-600" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-             <Input label="Trabalho Registrado (Qtd)" type="number" value={formData.workingCountRegistered} onChange={e => handleInputChange('workingCountRegistered', e.target.value)} />
-             <Input label="Trabalho Autônomo (Qtd)" type="number" value={formData.workingCountAutonomous} onChange={e => handleInputChange('workingCountAutonomous', e.target.value)} />
-          </div>
-          <YesNoToggle label="Possui CadÚnico?" value={formData.hasCadUnico} onChange={v => handleInputChange('hasCadUnico', v)} colorClass="bg-green-600" />
-          <div className="p-6 bg-green-50 rounded-[32px] space-y-4 border-2 border-green-100">
-             <p className="font-black text-[11px] uppercase text-green-700 px-2 tracking-widest flex items-center gap-2">
-               <i className="fa-solid fa-hand-holding-heart"></i> Benefícios Sociais
-             </p>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <YesNoToggle label="Bolsa Família?" value={formData.benefits.bolsaFamilia} onChange={v => handleBenefitChange('bolsaFamilia', v)} colorClass="bg-green-600" />
-                <YesNoToggle label="BPC / LOAS?" value={formData.benefits.bpcLoas} onChange={v => handleBenefitChange('bpcLoas', v)} colorClass="bg-green-600" />
-                <YesNoToggle label="Auxílio Aluguel?" value={formData.benefits.auxAluguel} onChange={v => handleBenefitChange('auxAluguel', v)} colorClass="bg-green-600" />
-                <YesNoToggle label="Possui ID Jovem?" value={formData.benefits.idJovem} onChange={v => handleBenefitChange('idJovem', v)} colorClass="bg-green-600" />
-             </div>
+        <div className="space-y-6 animate-in">
+          <h2 className="text-xl font-black text-slate-800 uppercase">5. Socioeconômico (Benefícios)</h2>
+          <div className="bg-slate-50 p-6 rounded-[32px] border-2 border-slate-100 space-y-6">
+            <MultiChoiceGroup label="Recebe Bolsa Família?" options={['Sim', 'Não']} value={formData.benefits.bolsaFamilia} onChange={v => handleBenefitChange('bolsaFamilia', v)} colorClass="bg-green-600" />
+            <MultiChoiceGroup label="Recebe BPC/LOAS?" options={['Sim', 'Não']} value={formData.benefits.bpcLoas} onChange={v => handleBenefitChange('bpcLoas', v)} colorClass="bg-green-600" />
+            <MultiChoiceGroup label="Possui ID Jovem?" options={['Sim', 'Não']} value={formData.benefits.idJovem} onChange={v => handleBenefitChange('idJovem', v)} colorClass="bg-green-600" />
+            <MultiChoiceGroup label="Outros Benefícios?" options={['Sim', 'Não']} value={formData.benefits.outros} onChange={v => handleBenefitChange('outros', v)} colorClass="bg-green-600" />
           </div>
         </div>
       );
       case 5: return (
-        <div className="space-y-6">
-          <SectionHeader num={6} title="Atividades e Saúde" colorClass="bg-red-500" />
-          <div className="p-1 bg-slate-100 rounded-[32px]">
-            <p className="px-6 pt-4 pb-2 text-[10px] font-black uppercase text-slate-500 tracking-widest">Selecione até 2 atividades *</p>
-            <div className="p-6 bg-white border-2 border-slate-100 rounded-[31px] grid grid-cols-1 md:grid-cols-3 gap-3">
-               {ACTIVITIES.map(act => (
-                 <button 
-                   key={act.id} 
-                   type="button" 
-                   onClick={() => toggleActivity(act.id)} 
-                   className={`p-4 text-left border-2 rounded-2xl transition-all ${formData.selectedActivities.some(a => a.activityId === act.id) ? 'bg-[#1d5ba5] border-transparent text-white shadow-lg' : 'bg-slate-50 border-slate-50 text-slate-700 hover:border-slate-200'}`}
-                 >
-                   <p className="font-black text-xs uppercase">{act.name}</p>
-                   <p className="text-[9px] opacity-70 font-bold">{act.instructor}</p>
-                 </button>
-               ))}
-            </div>
+        <div className="space-y-6 animate-in">
+          <h2 className="text-xl font-black text-slate-800 uppercase">6. Atividade & Saúde</h2>
+          <div className="bg-white border-2 border-slate-100 p-6 rounded-[32px] space-y-4 shadow-sm">
+            <MultiChoiceGroup label="Tratamento Médico?" options={['Sim', 'Não']} value={formData.healthTreatment} onChange={v => handleInputChange('healthTreatment', v)} />
+            <MultiChoiceGroup label="Medicação Contínua?" options={['Sim', 'Não']} value={formData.continuousMedication} onChange={v => handleInputChange('continuousMedication', v)} />
           </div>
-          <div className="space-y-4">
-            <YesNoToggle label="Realiza Tratamento Médico?" value={formData.healthTreatment} onChange={v => handleInputChange('healthTreatment', v)} colorClass="bg-red-500" />
-            {formData.healthTreatment === 'Sim' && <Input label="Qual Tratamento?" value={formData.healthDetails} onChange={e => handleInputChange('healthDetails', e.target.value)} />}
-            <YesNoToggle label="Medicação Contínua?" value={formData.continuousMedication} onChange={v => handleInputChange('continuousMedication', v)} colorClass="bg-red-500" />
-            {formData.continuousMedication === 'Sim' && <Input label="Qual Medicamento?" value={formData.medicationDetails} onChange={e => handleInputChange('medicationDetails', e.target.value)} />}
+          <div className="space-y-2">
+            <p className="text-[10px] font-black uppercase text-blue-600">Selecione até 2 Atividades</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              {ACTIVITIES.map(act => (
+                <button key={act.id} type="button" onClick={() => toggleActivity(act.id)} className={`p-4 text-left border-2 rounded-2xl transition-all ${formData.selectedActivities.some(a => a.activityId === act.id) ? 'bg-[#1d5ba5] text-white border-transparent shadow-md' : 'bg-white text-slate-700 border-slate-100 hover:border-slate-200'}`}>
+                  <p className="font-black text-xs uppercase">{act.name}</p>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       );
       case 6: return (
-        <div className="space-y-6">
-          <SectionHeader num={7} title="Termos Finais" colorClass="bg-slate-800" />
-          <div className="p-8 bg-white border-2 border-slate-100 rounded-[32px] space-y-6">
-             <div className={`p-4 rounded-2xl border-2 mb-4 ${formData.selectedActivities.length > 0 ? 'bg-green-50 border-green-100 text-green-700' : 'bg-red-50 border-red-100 text-red-700'}`}>
-               <p className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                 <i className={`fa-solid ${formData.selectedActivities.length > 0 ? 'fa-circle-check' : 'fa-circle-exclamation'}`}></i>
-                 {formData.selectedActivities.length > 0 
-                   ? `Atividade(s) Selecionada(s): ${formData.selectedActivities.length}` 
-                   : 'Nenhuma atividade selecionada! Volte ao passo anterior.'}
-               </p>
-             </div>
-             <label className="flex items-start gap-4 cursor-pointer group">
-               <input type="checkbox" checked={formData.imageRightsConsent} onChange={e => handleInputChange('imageRightsConsent', e.target.checked)} className="w-6 h-6 mt-1 accent-[#1d5ba5] rounded-lg" />
-               <span className="text-xs font-black uppercase text-slate-600 leading-relaxed">Autorizo o uso de imagem e voz para fins institucionais da Associação Amor e Bondade.</span>
-             </label>
-             <label className="flex items-start gap-4 cursor-pointer group">
-               <input type="checkbox" checked={formData.veracityConsent} onChange={e => handleInputChange('veracityConsent', e.target.checked)} className="w-6 h-6 mt-1 accent-orange-500 rounded-lg" />
-               <span className="text-xs font-black uppercase text-slate-600 leading-relaxed">Declaro que todas as informações prestadas são verdadeiras e completas.</span>
-             </label>
+        <div className="space-y-6 animate-in">
+          <h2 className="text-xl font-black text-slate-800 uppercase">7. Confirmação Final</h2>
+          <div className="bg-white p-8 rounded-[32px] border-4 border-slate-50 space-y-8 shadow-inner">
+            <p className="text-[11px] font-bold text-slate-400 leading-relaxed italic uppercase">DECLARO A VERACIDADE DAS INFORMAÇÕES ACIMA DECLARADA E ME COMPROMETO A MANTER AS MESMAS ATUALIZADAS. CASO SEJA DETECTADO QUALQUER INVERACIDADE, O CANDIDATO SERÁ DESLIGADO DO PROCESSO A QUALQUER MOMENTO.</p>
+            <label className="flex items-start gap-4 cursor-pointer group">
+              <input type="checkbox" checked={formData.imageRightsConsent} onChange={e => handleInputChange('imageRightsConsent', e.target.checked)} className="w-6 h-6 accent-blue-600 cursor-pointer mt-1" />
+              <span className="text-[11px] font-black uppercase text-slate-600 leading-tight">Autorizo o uso de imagem e voz para fins institucionais da Amor e Bondade.</span>
+            </label>
+            <label className="flex items-start gap-4 cursor-pointer group">
+              <input type="checkbox" checked={formData.veracityConsent} onChange={e => handleInputChange('veracityConsent', e.target.checked)} className="w-6 h-6 accent-orange-500 cursor-pointer mt-1" />
+              <span className="text-[11px] font-black uppercase text-slate-600 leading-tight">Declaro que li e concordo com todos os termos e veracidades.</span>
+            </label>
           </div>
         </div>
       );
@@ -526,104 +334,50 @@ const handleFinalConfirm = async () => {
     }
   };
 
-  const SectionHeader = ({ num, title, colorClass }: { num: number, title: string, colorClass: string }) => (
-    <div className="flex items-center gap-3 mb-6">
-      <div className={`w-8 h-8 rounded-xl ${colorClass} text-white flex items-center justify-center font-black text-sm shadow-md`}>{num}</div>
-      <h2 className="text-2xl font-black text-slate-800 tracking-tight uppercase">{title}</h2>
-    </div>
-  );
-
   return (
-    <div className="min-h-screen flex flex-col items-center bg-[#f0f9ff]">
+    <div className="min-h-screen flex flex-col items-center pb-20">
       {showDocPreview && previewData && (
-        <DocumentPreview 
-          data={previewData} 
-          isAdmin={view === 'admin'} 
-          onClose={() => { 
-            setShowDocPreview(false); 
-            setPreviewData(null); 
-            if(view === 'form') {
-              setFormData(INITIAL_DATA); 
-              setStep(0);
-            } 
-          }} 
-        />
+        <DocumentPreview data={previewData} isAdmin={view === 'admin'} onClose={() => { setShowDocPreview(false); if(view === 'form'){ setView('success'); setFormData(INITIAL_DATA); setStep(0); } }} onFinalConfirm={() => { setView('success'); setShowDocPreview(false); }} />
       )}
-      
-      <div className="w-full max-w-5xl px-4 py-10">
+      <div className="w-full max-w-5xl px-4 py-8">
         {view === 'form' ? (
-          <div className="animate-in fade-in duration-500">
-            <header className="mb-14 text-center flex flex-col items-center">
-              <h1 className="text-5xl md:text-7xl font-black text-[#1d5ba5] uppercase tracking-tighter mb-2">Amor e Bondade</h1>
-              <p className="text-slate-400 font-bold uppercase tracking-[0.4em] text-[10px]">REMATRÍCULA ONLINE 2026</p>
+          <div className="animate-in">
+            <header className="mb-10 text-center">
+              <h1 className="text-4xl md:text-7xl font-black text-[#1d5ba5] uppercase tracking-tighter leading-none">Amor e Bondade</h1>
+              <p className="text-orange-500 font-bold uppercase tracking-[0.4em] text-[10px] mt-2">Rematrícula 2026</p>
             </header>
-
-            <main className="bg-white rounded-[48px] p-6 md:p-12 shadow-2xl border-4 border-white/50">
+            <main className="bg-white rounded-[48px] p-6 md:p-14 shadow-2xl border-4 border-white relative">
               <StepProgress currentStep={step} />
               <form onSubmit={handleFinalAction}>
-                <div className="min-h-[450px]">{renderFormStep()}</div>
+                <div className="min-h-[450px]">{renderStep()}</div>
                 <div className="flex justify-between mt-12 pt-8 border-t border-slate-50">
-                  <button 
-                    type="button" 
-                    onClick={() => setStep(s => Math.max(0, s-1))} 
-                    disabled={step === 0} 
-                    className={`px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${step === 0 ? 'opacity-0' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
-                  >
-                    Voltar
-                  </button>
+                  <button type="button" onClick={() => setStep(s => Math.max(0, s-1))} className={`px-8 py-3 rounded-2xl font-black text-xs uppercase transition-all ${step === 0 ? 'invisible' : 'bg-slate-50 text-slate-300 hover:bg-slate-100 hover:text-slate-900'}`}>Anterior</button>
                   {step < FORM_STEPS.length - 1 ? (
-                    <button 
-                      type="button" 
-                      onClick={handleNextStep} 
-                      disabled={step === 0 && (!formData.cpf || isCpfDuplicate)}
-                      className={`px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all ${step === 0 && (!formData.cpf || isCpfDuplicate) ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-[#1d5ba5] text-white hover:bg-blue-800 active:scale-95'}`}
-                    >
-                      Continuar
-                    </button>
+                    <button type="button" onClick={handleNextStep} className="px-12 py-4 bg-[#1d5ba5] text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-blue-800 transition-all">Próximo Passo</button>
                   ) : (
-                    <button 
-                      type="submit" 
-                      className={`px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl transition-all ${formData.imageRightsConsent && formData.veracityConsent && formData.selectedActivities.length > 0 ? 'bg-blue-600 text-white hover:scale-105 shadow-blue-200' : 'bg-slate-100 text-slate-300 cursor-not-allowed'}`}
-                    >
-                      {formData.selectedActivities.length === 0 ? 'Selecione uma atividade' : 'Visualizar e Enviar Ficha'}
-                    </button>
+                    <button type="submit" className="px-12 py-5 bg-orange-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-orange-700 transition-all">Gerar Ficha Digital</button>
                   )}
                 </div>
               </form>
             </main>
           </div>
         ) : view === 'success' ? (
-          <div className="flex flex-col items-center justify-center py-20 animate-in fade-in zoom-in-95 duration-500">
-            <h2 className="text-5xl md:text-7xl font-black text-green-500 text-center uppercase tracking-tighter mb-4">ENVIADO!</h2>
-            <h3 className="text-3xl font-black text-slate-800 text-center uppercase tracking-tight mb-4">Sucesso Total</h3>
-            <p className="text-slate-500 font-bold text-center max-w-md mb-12 uppercase text-xs tracking-widest leading-relaxed">
-              Sua rematrícula para o ano de 2026 foi processada com sucesso. A Associação Amor e Bondade agradece sua participação!
-            </p>
-            <button 
-              onClick={() => setView('form')}
-              className="px-12 py-5 bg-slate-900 text-white rounded-3xl font-black text-xs uppercase tracking-widest hover:bg-black transition-all shadow-xl active:scale-95"
-            >
-              Fazer outra Rematrícula
-            </button>
+          <div className="flex flex-col items-center justify-center py-20 text-center animate-in">
+            <div className="w-32 h-32 bg-green-50 text-green-500 rounded-full flex items-center justify-center text-6xl mb-8 shadow-inner border-2 border-green-100"><i className="fa-solid fa-check"></i></div>
+            <h2 className="text-5xl font-black text-slate-900 uppercase tracking-tighter">Inscrição Enviada!</h2>
+            <button onClick={() => { setView('form'); setStep(0); setFormData(INITIAL_DATA); }} className="mt-12 px-14 py-5 bg-[#1d5ba5] text-white rounded-3xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-blue-800 transition-all">Nova Inscrição</button>
           </div>
         ) : view === 'login' ? (
-          <Login 
-            onSuccess={() => { setIsAuth(true); sessionStorage.setItem('amor_bondade_auth', 'true'); setView('admin'); }} 
-            onCancel={() => setView('form')} 
-          />
+          <Login onSuccess={() => { setIsAuth(true); sessionStorage.setItem('amor_bondade_auth', 'true'); setView('admin'); }} onCancel={() => setView('form')} />
         ) : (
-          <AdminDashboard 
-            onViewDetails={(data) => { setPreviewData(data); setShowDocPreview(true); }} 
-            onLogout={handleLogout}
-          />
+          <AdminDashboard onViewDetails={(data) => { setPreviewData(data); setShowDocPreview(true); }} onLogout={() => { setIsAuth(false); setView('form'); }} />
         )}
       </div>
-
-      <footer className="mt-auto py-12 w-full max-w-5xl px-6 flex flex-col md:flex-row justify-between items-center gap-6 border-t border-slate-200/30">
-        <div className="text-slate-300 text-[9px] font-black uppercase tracking-widest">© 2025 Associação Amor e Bondade - Unidade I - Guarulhos</div>
-        <div className="flex gap-2">
-          <button onClick={() => { setView('form'); setStep(0); setFormData(INITIAL_DATA); }} className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${view === 'form' || view === 'success' ? 'bg-[#1d5ba5] text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>Formulário</button>
-          <button onClick={() => isAuth ? setView('admin') : setView('login')} className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${view === 'admin' ? 'bg-slate-800 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>Administrador</button>
+      <footer className="mt-auto py-10 w-full flex flex-col md:flex-row items-center justify-center gap-6 text-slate-300 font-bold text-[10px] uppercase tracking-widest">
+        <p>© 2025 Associação Amor e Bondade</p>
+        <div className="flex gap-4">
+          <button onClick={() => setView('form')} className="hover:text-[#1d5ba5] transition-colors">Formulário</button>
+          <button onClick={() => isAuth ? setView('admin') : setView('login')} className="hover:text-slate-900 transition-colors">Administração</button>
         </div>
       </footer>
     </div>
