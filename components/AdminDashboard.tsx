@@ -11,6 +11,7 @@ interface AdminDashboardProps {
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ onViewDetails, onLogout }) => {
   const [submissions, setSubmissions] = useState<FormData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showSqlSchema, setShowSqlSchema] = useState(false);
 
   const loadSubmissions = () => {
     const saved = localStorage.getItem('amor_bondade_submissions');
@@ -25,13 +26,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onViewDetails, onLogout
 
   const handleDelete = (id: string | undefined) => {
     if (!id) return;
-    
-    // Pergunta de confirmação solicitada
-    if (window.confirm('Tem certeza que deseja excluir?')) {
+    if (window.confirm('Tem certeza que deseja excluir permanentemente este registro?')) {
       const saved = localStorage.getItem('amor_bondade_submissions');
       const currentSubmissions: FormData[] = saved ? JSON.parse(saved) : [];
       const updated = currentSubmissions.filter(s => s.id !== id);
-      
       localStorage.setItem('amor_bondade_submissions', JSON.stringify(updated));
       setSubmissions(updated);
     }
@@ -52,34 +50,64 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onViewDetails, onLogout
         </div>
         
         <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto items-center">
-          <div className="relative w-full md:w-80">
+          <button 
+            onClick={() => setShowSqlSchema(!showSqlSchema)}
+            className="px-4 py-3 bg-blue-50 text-[#1d5ba5] rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-blue-100 transition-all active:scale-95"
+          >
+            <i className="fa-solid fa-database"></i> Estrutura SQL
+          </button>
+          
+          <div className="relative w-full md:w-64">
             <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
             <input 
               type="text" 
-              placeholder="Buscar aluno ou CPF..."
+              placeholder="Buscar..."
               className="w-full pl-12 pr-4 py-3 bg-white border-2 border-slate-100 rounded-2xl focus:border-[#1d5ba5] outline-none transition-all font-bold text-slate-700 shadow-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           
-          {/* Botão para sair da página do administrador */}
           <button 
             onClick={onLogout}
             className="px-6 py-3.5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-black transition-all shadow-lg active:scale-95"
           >
-            <i className="fa-solid fa-right-from-bracket"></i> Sair do Painel
+            <i className="fa-solid fa-right-from-bracket"></i> Sair
           </button>
         </div>
       </div>
+
+      {showSqlSchema && (
+        <div className="mb-8 p-6 bg-slate-900 rounded-[30px] border border-slate-800 animate-in slide-in-from-top duration-300">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-white font-black uppercase text-xs tracking-widest flex items-center gap-2">
+              <i className="fa-solid fa-code text-blue-400"></i> Esquema do Banco de Dados (SQL)
+            </h3>
+            <button onClick={() => setShowSqlSchema(false)} className="text-slate-500 hover:text-white">
+              <i className="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <pre className="text-blue-300 text-[10px] font-mono overflow-x-auto p-4 bg-black/50 rounded-xl leading-relaxed">
+{`-- Tabelas Principais (Normalizadas)
+CREATE TABLE alunos (id SERIAL PRIMARY KEY, nome_completo VARCHAR(255), cpf VARCHAR(14) UNIQUE...);
+CREATE TABLE enderecos (aluno_id INT REFERENCES alunos(id), logradouro VARCHAR(255)...);
+CREATE TABLE familiares (aluno_id INT REFERENCES alunos(id), nome_pai VARCHAR(255)...);
+CREATE TABLE atividades (id SERIAL PRIMARY KEY, nome VARCHAR(100), instrutor VARCHAR(100));
+CREATE TABLE matriculas_atividades (aluno_id INT, atividade_id INT...);`}
+          </pre>
+          <p className="text-slate-500 text-[9px] mt-4 font-bold uppercase tracking-widest">
+            * Este esquema representa a estrutura recomendada para migrar do LocalStorage para um servidor SQL.
+          </p>
+        </div>
+      )}
 
       <div className="bg-white rounded-[30px] border border-slate-100 shadow-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-100">
-                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Nº</th>
-                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Data e Horário</th>
+                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">ID</th>
+                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Data</th>
                 <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Aluno</th>
                 <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">CPF</th>
                 <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Atividades</th>
@@ -97,10 +125,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onViewDetails, onLogout
                   <td className="px-6 py-4">
                     <p className="text-xs font-black text-slate-700">
                       {sub.submissionDate ? new Date(sub.submissionDate).toLocaleDateString('pt-BR') : '-'}
-                    </p>
-                    <p className="text-[10px] font-bold text-blue-600 uppercase">
-                      <i className="fa-regular fa-clock mr-1"></i>
-                      {sub.submissionDate ? new Date(sub.submissionDate).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}
                     </p>
                   </td>
                   <td className="px-6 py-4">
@@ -125,14 +149,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onViewDetails, onLogout
                       <button 
                         onClick={() => onViewDetails(sub)}
                         className="w-10 h-10 flex items-center justify-center bg-blue-50 text-[#1d5ba5] rounded-xl hover:bg-[#1d5ba5] hover:text-white transition-all shadow-sm active:scale-90"
-                        title="Ver Ficha"
                       >
                         <i className="fa-solid fa-eye"></i>
                       </button>
                       <button 
                         onClick={() => handleDelete(sub.id)}
                         className="w-10 h-10 flex items-center justify-center bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all active:scale-90"
-                        title="Apagar Registro"
                       >
                         <i className="fa-solid fa-trash-can"></i>
                       </button>
@@ -142,12 +164,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onViewDetails, onLogout
               )) : (
                 <tr>
                   <td colSpan={6} className="px-6 py-24 text-center">
-                    <div className="flex flex-col items-center gap-4">
-                      <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200">
-                        <i className="fa-solid fa-folder-open text-4xl"></i>
-                      </div>
-                      <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">Nenhum cadastro encontrado</p>
-                    </div>
+                    <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">Nenhum cadastro encontrado</p>
                   </td>
                 </tr>
               )}
@@ -158,22 +175,22 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onViewDetails, onLogout
 
       <div className="mt-8 flex flex-col md:flex-row justify-between items-center gap-4 px-4">
         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-          Total de rematrículas: <span className="text-slate-900">{filteredSubmissions.length}</span>
+          Total de registros: <span className="text-slate-900">{filteredSubmissions.length}</span>
         </p>
         <div className="flex gap-4">
           <button 
             onClick={() => {
-              const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(submissions));
+              const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(submissions, null, 2));
               const downloadAnchorNode = document.createElement('a');
               downloadAnchorNode.setAttribute("href", dataStr);
-              downloadAnchorNode.setAttribute("download", `rematriculas_2026.json`);
+              downloadAnchorNode.setAttribute("download", `rematriculas_2026_export.json`);
               document.body.appendChild(downloadAnchorNode);
               downloadAnchorNode.click();
               downloadAnchorNode.remove();
             }}
             className="text-[10px] font-black text-[#1d5ba5] uppercase tracking-widest flex items-center gap-2 hover:bg-blue-50 px-4 py-2 rounded-xl transition-all"
           >
-            <i className="fa-solid fa-file-export"></i> Exportar JSON
+            <i className="fa-solid fa-file-export"></i> Backup dos Dados
           </button>
         </div>
       </div>
