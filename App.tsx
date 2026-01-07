@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Input from './components/Input';
 import StepProgress from './components/StepProgress';
 import AdminDashboard from './components/AdminDashboard';
@@ -31,7 +31,35 @@ const DocumentPreview: React.FC<{ data: FormData; onClose: () => void; isAdmin: 
     : '--/--/----';
 
   const handleDownloadPDF = () => {
-    window.print();
+    const element = document.getElementById('printable-root');
+    if (!element) {
+      window.print();
+      return;
+    }
+
+    // Ajustamos as margens e a escala para garantir que o conteúdo não seja cortado à direita
+    const opt = {
+      margin: [10, 10, 10, 10], // Aumentamos as margens de segurança (topo, esquerda, baixo, direita)
+      filename: `FICHA_2026_${data.fullName.replace(/\s+/g, '_').toUpperCase()}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true, 
+        letterRendering: true,
+        scrollY: 0,
+        scrollX: 0,
+        backgroundColor: '#ffffff'
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    // @ts-ignore
+    if (window && (window as any).html2pdf) {
+      // @ts-ignore
+      window.html2pdf().set(opt).from(element).save();
+    } else {
+      window.print();
+    }
   };
 
   return (
@@ -42,7 +70,7 @@ const DocumentPreview: React.FC<{ data: FormData; onClose: () => void; isAdmin: 
           <div className="flex items-center gap-3">
             <div className="w-3 h-3 rounded-full bg-blue-600"></div>
             <h3 className="font-black uppercase tracking-widest text-[10px] text-slate-400">
-              Ficha de Rematrícula 2026
+              Visualização da Ficha Digital
             </h3>
           </div>
           <button onClick={onClose} className="w-10 h-10 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center transition-all">
@@ -50,11 +78,19 @@ const DocumentPreview: React.FC<{ data: FormData; onClose: () => void; isAdmin: 
           </button>
         </div>
 
-        <div className="p-8 md:p-16 text-slate-800 bg-white">
-          <div className="border-4 border-slate-900 p-8 relative">
-            <div className="flex justify-between items-start mb-10">
+        <div className="p-4 md:p-8 bg-slate-50 overflow-y-auto max-h-[75vh] no-print">
+           <p className="text-[10px] font-bold text-slate-400 text-center uppercase mb-4">Confira os dados abaixo antes de gerar o PDF</p>
+        </div>
+
+        {/* 
+          Ajuste de largura: A4 tem 210mm. 
+          Definimos a largura do conteúdo para 190mm para deixar 10mm de margem em cada lado, 
+          evitando que o conteúdo encoste ou saia pela direita.
+        */}
+        <div id="printable-root" className="bg-white p-[5mm] mx-auto" style={{ width: '190mm' }}>
+          <div className="border-4 border-slate-900 p-8 relative flex flex-col">
+            <div className="flex justify-between items-start mb-8">
                <div className="flex items-center gap-4">
-                 {/* Logo AB Removida conforme pedido */}
                  <div>
                    <h1 className="text-xl font-black uppercase text-slate-900 leading-none">Associação Amor e Bondade</h1>
                    <p className="text-[10px] font-bold text-slate-500 uppercase mt-1 tracking-widest">Ficha de Inscrição 2026 - Digital</p>
@@ -67,9 +103,9 @@ const DocumentPreview: React.FC<{ data: FormData; onClose: () => void; isAdmin: 
                </div>
             </div>
 
-            <div className="space-y-6 text-[10px] leading-relaxed">
+            <div className="space-y-6 text-[11px] leading-relaxed">
               <section>
-                <h4 className="font-black uppercase text-[#1d5ba5] mb-3 border-b border-slate-100 pb-1">1. Dados do Aluno</h4>
+                <h4 className="font-black uppercase text-[#1d5ba5] mb-2 border-b-2 border-slate-900 pb-1">1. Dados do Aluno</h4>
                 <div className="grid grid-cols-2 gap-y-2">
                   <p className="col-span-2"><strong>NOME DO ALUNO:</strong> {data.fullName.toUpperCase()}</p>
                   <p><strong>DATA DE NASCIMENTO:</strong> {data.birthDate} ({data.age} ANOS)</p>
@@ -81,7 +117,7 @@ const DocumentPreview: React.FC<{ data: FormData; onClose: () => void; isAdmin: 
               </section>
 
               <section>
-                <h4 className="font-black uppercase text-[#1d5ba5] mb-3 border-b border-slate-100 pb-1">2. Escolaridade</h4>
+                <h4 className="font-black uppercase text-[#1d5ba5] mb-2 border-b-2 border-slate-900 pb-1">2. Escolaridade</h4>
                 <div className="grid grid-cols-2 gap-y-2">
                   <p className="col-span-2"><strong>ESCOLA:</strong> {data.schoolName.toUpperCase()}</p>
                   <p><strong>SÉRIE EM 2026:</strong> {data.schoolGrade}</p>
@@ -90,7 +126,7 @@ const DocumentPreview: React.FC<{ data: FormData; onClose: () => void; isAdmin: 
               </section>
 
               <section>
-                <h4 className="font-black uppercase text-[#1d5ba5] mb-3 border-b border-slate-100 pb-1">3. Endereço e Moradia</h4>
+                <h4 className="font-black uppercase text-[#1d5ba5] mb-2 border-b-2 border-slate-900 pb-1">3. Endereço e Moradia</h4>
                 <div className="grid grid-cols-2 gap-y-2">
                   <p className="col-span-2"><strong>ENDEREÇO:</strong> {data.address}, {data.addressNo} - {data.neighborhood}</p>
                   <p><strong>MORADIA:</strong> {data.housingType}</p>
@@ -100,7 +136,7 @@ const DocumentPreview: React.FC<{ data: FormData; onClose: () => void; isAdmin: 
               </section>
 
               <section>
-                <h4 className="font-black uppercase text-[#1d5ba5] mb-3 border-b border-slate-100 pb-1">4. Benefícios Sociais</h4>
+                <h4 className="font-black uppercase text-[#1d5ba5] mb-2 border-b-2 border-slate-900 pb-1">4. Benefícios Sociais</h4>
                 <div className="grid grid-cols-2 gap-y-2">
                   <p><strong>BOLSA FAMÍLIA:</strong> {data.benefits.bolsaFamilia}</p>
                   <p><strong>BPC/LOAS:</strong> {data.benefits.bpcLoas}</p>
@@ -109,33 +145,51 @@ const DocumentPreview: React.FC<{ data: FormData; onClose: () => void; isAdmin: 
                 </div>
               </section>
 
-              <div className="border border-slate-200 rounded-lg p-4 bg-slate-50">
-                <h4 className="font-black uppercase text-[#1d5ba5] mb-2">Atividades Selecionadas</h4>
-                <div className="flex flex-wrap gap-4">
-                  {data.selectedActivities.map(sa => {
-                    const act = ACTIVITIES.find(a => a.id === sa.activityId);
-                    return act ? <div key={act.id} className="bg-white border border-slate-200 px-3 py-1 rounded font-bold uppercase text-[9px]">{act.name}</div> : null;
-                  })}
+              <section>
+                <h4 className="font-black uppercase text-[#1d5ba5] mb-2 border-b-2 border-slate-900 pb-1">5. Atividades Selecionadas para 2026</h4>
+                <div className="grid grid-cols-1 gap-2 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                  <div className="flex flex-wrap gap-4">
+                    {data.selectedActivities.map(sa => {
+                      const act = ACTIVITIES.find(a => a.id === sa.activityId);
+                      return act ? (
+                        <div key={act.id} className="bg-white border-2 border-slate-900 px-4 py-2 rounded font-black uppercase text-[10px] shadow-sm">
+                          {act.name}
+                        </div>
+                      ) : null;
+                    })}
+                  </div>
                 </div>
-              </div>
+              </section>
 
-              <div className="pt-10 border-t border-slate-100 flex justify-between items-end">
-                <div>
+              <div className="pt-12 border-t border-slate-200 flex justify-between items-end mt-auto">
+                <div className="space-y-1">
                    <p className="font-black uppercase text-[8px] text-slate-400">Data e Hora do Cadastro:</p>
-                   <p className="text-xs font-black text-slate-900">{formattedDate} às {formattedTime}</p>
+                   <p className="text-[10px] font-black text-slate-900">{formattedDate} às {formattedTime}</p>
+                   <p className="text-[7px] text-slate-300 font-bold uppercase italic">Validado via Plataforma Digital Amor e Bondade</p>
                 </div>
                 <div className="text-center w-64">
-                  <div className="border-t border-slate-900 mt-4 pt-1 font-black uppercase text-[8px]">Assinatura do Responsável</div>
+                  <div className="border-t-2 border-slate-900 mt-4 pt-2 font-black uppercase text-[9px]">Assinatura do Responsável</div>
+                  <p className="text-[7px] text-slate-400 mt-1 uppercase font-bold">Identificado via CPF: {data.cpf}</p>
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          <div className="mt-12 no-print space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button onClick={handleDownloadPDF} className="py-5 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2"><i className="fa-solid fa-file-pdf"></i> Baixar em PDF</button>
-              <button onClick={onFinalConfirm} className="py-5 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-black transition-all flex items-center justify-center gap-2"><i className="fa-solid fa-check"></i> Finalizar Cadastro</button>
-            </div>
+        <div className="p-8 bg-white border-t border-slate-100 no-print">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+            <button 
+              onClick={handleDownloadPDF} 
+              className="py-5 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-blue-700 transition-all flex items-center justify-center gap-3 active:scale-95"
+            >
+              <i className="fa-solid fa-file-pdf text-xl"></i> Baixar em PDF
+            </button>
+            <button 
+              onClick={onFinalConfirm} 
+              className="py-5 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-black transition-all flex items-center justify-center gap-3 active:scale-95"
+            >
+              <i className="fa-solid fa-check text-xl"></i> Finalizar Cadastro
+            </button>
           </div>
         </div>
       </div>
