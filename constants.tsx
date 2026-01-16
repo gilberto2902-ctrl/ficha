@@ -50,12 +50,7 @@ export const ACTIVITIES: Activity[] = [
     instructor: 'Luana',
     days: ['Sábado']
   },
-  {
-    id: '9',
-    name: 'Hip Hop',
-    instructor: 'Jhonatan, Flávia e Ewentor',
-    days: ['Sábado']
-  }
+ 
 ];
 
 export const FORM_STEPS = [
