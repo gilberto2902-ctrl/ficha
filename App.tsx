@@ -398,7 +398,7 @@ const App: React.FC = () => {
           <div className="animate-in">
             <header className="mb-10 text-center">
               <h1 className="text-4xl md:text-7xl font-black text-[#1d5ba5] uppercase tracking-tighter leading-none">Amor e Bondade</h1>
-              <p className="text-orange-500 font-bold uppercase tracking-[0.4em] text-[10px] mt-2">Rematrícula 2026</p>
+              <p className="text-orange-500 font-bold uppercase tracking-[0.4em] text-[10px] mt-2">Matrícula 2026</p>
             </header>
             <main className="bg-white rounded-[48px] p-6 md:p-14 shadow-2xl border-4 border-white relative">
               <StepProgress currentStep={step} />
